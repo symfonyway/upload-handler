@@ -2,11 +2,15 @@
 
 namespace SymfonyArt\UploadHandlerBundle\EventListener;
 
-use Symfony\Component\Security\Acl\Exception\Exception;
+use SymfonyArt\UploadHandlerBundle\Annotation\AnnotationInterface;
+use SymfonyArt\UploadHandlerBundle\Annotation\Image;
 use SymfonyArt\UploadHandlerBundle\Entity\ImageUploadableInterface;
+use SymfonyArt\UploadHandlerBundle\Exception\ConfigurationException;
 use SymfonyArt\UploadHandlerBundle\Exception\UploadHandleException;
 use SymfonyArt\UploadHandlerBundle\Service\ImageHandler;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Doctrine\Common\Annotations\Reader;
+use SymfonyArt\UploadHandlerBundle\Tool\ClassTool;
 
 /**
  * Class UploadListener
@@ -16,41 +20,65 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
  */
 class UploadListener
 {
-    /**
-     * @var ImageHandler
-     */
+    /** @var Reader */
+    private $reader;
+
+    /** @var ImageHandler */
     private $imageHandler;
 
     /**
      * @param \SymfonyArt\UploadHandlerBundle\Service\ImageHandler $imageHandler
      */
-    public function __construct(ImageHandler $imageHandler)
+    public function __construct(Reader $reader, ImageHandler $imageHandler)
     {
+        $this->reader = $reader;
         $this->imageHandler = $imageHandler;
     }
 
     /**
-     * @param \SymfonyArt\UploadHandlerBundle\Entity\ImageUploadableInterface $entity
+     * @param object $entity
      */
-    public function preUpdate(ImageUploadableInterface $entity)
+    public function preUpdate($entity)
     {
-        $this->upload($entity);
+        $this->handleUpload($entity);
     }
 
     /**
-     * @param \SymfonyArt\UploadHandlerBundle\Entity\ImageUploadableInterface $entity
+     * @param object $entity
      */
-    public function prePersist(ImageUploadableInterface $entity)
+    public function prePersist($entity)
     {
-        $this->upload($entity);
+        $this->handleUpload($entity);
     }
 
     /**
-     * @param \SymfonyArt\UploadHandlerBundle\Entity\ImageUploadableInterface $entity
+     * @param object $entity
+     * @throws ConfigurationException
      * @throws UploadHandleException
      */
-    public function upload(ImageUploadableInterface $entity)
+    private function handleUpload($entity)
     {
+        $entityReflection = new \ReflectionObject($entity);
+        $propertyReflections = $entityReflection->getProperties();
+
+        foreach ($propertyReflections as $propertyReflection) {
+            $annotations = $this->reader->getPropertyAnnotations($propertyReflection);
+
+            foreach ($annotations as $annotation) {
+                if (!($annotation instanceof AnnotationInterface)) {
+                    continue;
+                }
+
+                //TODO: suppert all AnnotationInterface annotations
+                if (!is_a($annotation, 'SymfonyArt\UploadHandlerBundle\Annotation\Image')) {
+                    throw new ConfigurationException('Only Image annotation supports now.');
+                }
+
+                $this->uploadImage($entity, $entityReflection, $propertyReflection, $annotation);
+            }
+        }
+
+
         foreach ($entity->getImageProperties() as $property => $filter) {
             if (null === $entity->{'get'.ucfirst($property).'File'}()) {
                 continue;
@@ -80,6 +108,48 @@ class UploadListener
             if (file_exists($filepath)) {
                 unlink($filepath);
             }
+        }
+    }
+
+    /**
+     * @param $entity
+     * @param \ReflectionObject $reflectionObject
+     * @param \ReflectionProperty $propertyReflection
+     * @param Image $annotation
+     * @throws UploadHandleException
+     * @throws \UploadHandleException
+     */
+    private function uploadImage($entity, \ReflectionObject $reflectionObject, \ReflectionProperty $propertyReflection, Image $annotation)
+    {
+        $filePropertyName = $annotation->getFileProperty();
+        $fileProperty = $reflectionObject->getProperty($filePropertyName);
+
+        /** @var UploadedFile $file */
+        if (!$file = $fileProperty->getValue()) {
+            return;
+        }
+        if (!is_a($file, 'Symfony\Component\HttpFoundation\File\UploadedFile')) {
+            throw new \UploadHandleException(sprintf('Property %s contains %s, instance of Symfony\Component\HttpFoundation\File\UploadedFile expected.', $filePropertyName, get_class($file)));
+        }
+
+        $filter = $annotation->getFilter();
+        $path = $this->imageHandler->handle(file_get_contents($file->getRealPath()), $filter);
+
+        if (!$path) {
+            throw new UploadHandleException($this->imageHandler->getError());
+        }
+
+        $pathPropertyName = $propertyReflection->getName();
+        if ($pathPropertySetter = ClassTool::getSetter($pathPropertyName, $entity)) {
+            $entity->{$pathPropertySetter}($path);
+        } else {
+            $propertyReflection->setValue($entity, $path);
+        }
+
+        if ($filePropertySetter = ClassTool::getSetter($filePropertyName, $entity)) {
+            $entity->{$filePropertySetter}(null);
+        } else {
+            $fileProperty->setValue($entity, $path);
         }
     }
 }
