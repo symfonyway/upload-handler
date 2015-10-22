@@ -2,7 +2,7 @@
 
 namespace SymfonyArt\UploadHandlerBundle\UploadableProcessor;
 
-use SymfonyArt\UploadHandlerBundle\AnnotationHandlerCollector\AnnotationHandlerCollector;
+use SymfonyArt\UploadHandlerBundle\UploadableHandlerStorage\AnnotationHandlerStorage;
 use SymfonyArt\UploadHandlerBundle\Model\AnnotatedProperty;
 use SymfonyArt\UploadHandlerBundle\Tool\AnnotationReader;
 use SymfonyArt\UploadHandlerBundle\UploadableHandler\AnnotationHandlerInterface;
@@ -12,16 +12,16 @@ class AnnotationProcessor implements UploadableProcessorInterface
     /** @var AnnotationReader */
     private $annotationReader;
 
-    /** @var AnnotationHandlerCollector */
-    private $annotationHandlerCollector;
+    /** @var AnnotationHandlerStorage */
+    private $annotationHandlerStorage;
 
     /**
      * @param AnnotationReader $annotationReader
      */
-    public function __construct(AnnotationReader $annotationReader, AnnotationHandlerCollector $annotationHandlerCollector)
+    public function __construct(AnnotationReader $annotationReader, AnnotationHandlerStorage $annotationHandlerCollector)
     {
         $this->annotationReader = $annotationReader;
-        $this->annotationHandlerCollector = $annotationHandlerCollector;
+        $this->annotationHandlerStorage = $annotationHandlerCollector;
     }
 
     /**
@@ -87,7 +87,7 @@ class AnnotationProcessor implements UploadableProcessorInterface
     private function getAnnotationHandler(AnnotatedProperty $annotatedProperty)
     {
         $annotation = $annotatedProperty->getAnnotation();
-        $annotationHandler = $this->annotationHandlerCollector->findHandlerByAnnotation($annotation);
+        $annotationHandler = $this->annotationHandlerStorage->findHandlerByAnnotation($annotation);
 
         return $annotationHandler;
     }

@@ -1,0 +1,29 @@
+parameters:
+    symfonyart_upload_handler.event_listener.upload_listener.class: SymfonyArt\UploadHandlerBundle\EventListener\UploadListener
+    symfonyart_upload_handler.uploadable_processor.annotation_processor.class: SymfonyArt\UploadHandlerBundle\UploadableProcessor\AnnotationProcessor
+    symfonyart_upload_handler.tools.annotation_reader.class: SymfonyArt\UploadHandlerBundle\Tool\AnnotationReader
+    symfonyart_upload_handler.uploadable_handler_storage.annotation_handler_storage.class: SymfonyArt\UploadHandlerBundle\UploadableHandlerStorage\AnnotationHandlerStorage
+
+services:
+    symfonyart_upload_handler.event_listener.upload_listener:
+        class: %symfonyart_upload_handler.event_listener.upload_listener.class%
+        arguments:
+            uploadableProcessor: @symfonyart_upload_handler.uploadable_processor.annotation_processor
+        tags:
+            - { name: doctrine.orm.entity_listener }
+
+    symfonyart_upload_handler.uploadable_processor.annotation_processor:
+        class: %symfonyart_upload_handler.uploadable_processor.annotation_processor.class%
+        arguments:
+            annotationReader:         @symfonyart_upload_handler.tools.annotation_reader
+            annotationHandlerStorage: @symfonyart_upload_handler.uploadable_handler_storage.annotation_handler_storage
+
+    symfonyart_upload_handler.tools.annotation_reader:
+        class: %symfonyart_upload_handler.tools.annotation_reader.class%
+        arguments:
+            reader: @annotation_reader
+
+    symfonyart_upload_handler.uploadable_handler_storage.annotation_handler_storage:
+        class: %symfonyart_upload_handler.uploadable_handler_storage.annotation_handler_storage.class%
+        tags:
+            - { name: symfonyart_upload_handler.handler_storage }

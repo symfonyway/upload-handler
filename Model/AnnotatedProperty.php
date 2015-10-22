@@ -2,34 +2,10 @@
 
 namespace SymfonyArt\UploadHandlerBundle\Model;
 
-use SymfonyArt\UploadHandlerBundle\Annotation\AnnotationInterface;
-
-class AnnotatedProperty extends BaseUploadableProperty
+class AnnotatedProperty extends BaseAnnotatedObjectPart
 {
     /** @var \ReflectionProperty */
     private $propertyReflection;
-
-    /** @var AnnotationInterface */
-    private $annotation;
-
-    /**
-     * @return AnnotationInterface
-     */
-    public function getAnnotation()
-    {
-        return $this->annotation;
-    }
-
-    /**
-     * @param AnnotationInterface $annotation
-     * @return $this
-     */
-    public function setAnnotation($annotation)
-    {
-        $this->annotation = $annotation;
-
-        return $this;
-    }
 
     /**
      * @return \ReflectionProperty

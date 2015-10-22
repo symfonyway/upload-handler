@@ -6,7 +6,7 @@ namespace SymfonyArt\UploadHandlerBundle\Annotation;
  * @Annotation
  * @Target({"PROPERTY"})
  * @Attributes({
- *   @Attribute("fileProperty", type = "string"),
+ *   @Attribute("pathProperty", type = "string"),
  *   @Attribute("filter",  type = "string"),
  * })
  */
@@ -16,7 +16,7 @@ class Image implements AnnotationInterface
      * @var string
      * @Required
      */
-    private $fileProperty;
+    private $pathProperty;
 
     /**
      * @var string
@@ -29,7 +29,7 @@ class Image implements AnnotationInterface
      */
     public function __construct(array $values)
     {
-        $this->fileProperty = $values['value'];
+        $this->pathProperty = $values['value'];
         $this->filter = $values['filter'];
     }
 
@@ -44,8 +44,16 @@ class Image implements AnnotationInterface
     /**
      * @return string
      */
-    public function getFileProperty()
+    public function getPathProperty()
     {
-        return $this->fileProperty;
+        return $this->pathProperty;
+    }
+
+    /**
+     * @return string
+     */
+    public function getHandlerName()
+    {
+        return 'symfonyart_upload_handler.uploadable_handler.image_handler';
     }
 }

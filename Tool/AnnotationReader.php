@@ -4,6 +4,7 @@ namespace SymfonyArt\UploadHandlerBundle\Tool;
 
 use Doctrine\Common\Annotations\Reader;
 use Doctrine\Common\Collections\ArrayCollection;
+use SymfonyArt\UploadHandlerBundle\Annotation\AnnotationInterface;
 use SymfonyArt\UploadHandlerBundle\Model\AnnotatedProperty;
 
 class AnnotationReader
@@ -40,11 +41,10 @@ class AnnotationReader
 
                 $annotatedProperty = new AnnotatedProperty();
                 $annotatedProperty->setObject($object);
-                $annotatedProperty->setPropertyName($propertyReflection->getName());
                 $annotatedProperty->setPropertyReflection($propertyReflection);
                 $annotatedProperty->setAnnotation($annotation);
 
-                $annotatedProperties->add($object);
+                $annotatedProperties->add($annotatedProperty);
             }
         }
 

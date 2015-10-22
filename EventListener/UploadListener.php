@@ -33,7 +33,7 @@ class UploadListener
     /**
      * @param \SymfonyArt\UploadHandlerBundle\Service\ImageHandler $imageHandler
      */
-    public function __construct(UploadableProcessorInterface $uploadableProcessor, Reader $reader, ImageHandler $imageHandler)
+    public function __construct(UploadableProcessorInterface $uploadableProcessor, Reader $reader = null, ImageHandler $imageHandler = null)
     {
         $this->uploadableProcessor = $uploadableProcessor;
         $this->reader = $reader;
@@ -131,7 +131,7 @@ class UploadListener
      */
     private function uploadImage($entity, \ReflectionObject $reflectionObject, \ReflectionProperty $propertyReflection, Image $annotation)
     {
-        $filePropertyName = $annotation->getFileProperty();
+        $filePropertyName = $annotation->getPathProperty();
         $fileProperty = $reflectionObject->getProperty($filePropertyName);
 
         /** @var UploadedFile $file */

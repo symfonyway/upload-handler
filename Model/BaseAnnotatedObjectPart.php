@@ -2,13 +2,15 @@
 
 namespace SymfonyArt\UploadHandlerBundle\Model;
 
-abstract class BaseUploadableProperty
+use SymfonyArt\UploadHandlerBundle\Annotation\AnnotationInterface;
+
+abstract class BaseAnnotatedObjectPart
 {
     /** @var object */
     protected $object;
 
-    /** @var string */
-    protected $propertyName;
+    /** @var AnnotationInterface */
+    protected $annotation;
 
     /**
      * @return object
@@ -30,20 +32,20 @@ abstract class BaseUploadableProperty
     }
 
     /**
-     * @return string
+     * @return AnnotationInterface
      */
-    public function getPropertyName()
+    public function getAnnotation()
     {
-        return $this->propertyName;
+        return $this->annotation;
     }
 
     /**
-     * @param string $propertyName
+     * @param AnnotationInterface $annotation
      * @return $this
      */
-    public function setPropertyName($propertyName)
+    public function setAnnotation($annotation)
     {
-        $this->propertyName = $propertyName;
+        $this->annotation = $annotation;
 
         return $this;
     }

@@ -1,0 +1,10 @@
+parameters:
+    symfonyart_upload_handler.uploadable_handler.image_handler.class: SymfonyArt\UploadHandlerBundle\UploadableHandler\ImageHandler
+
+services:
+    symfonyart_upload_handler.uploadable_handler.image_handler:
+        class: %symfonyart_upload_handler.uploadable_handler.image_handler.class%
+        arguments:
+            imageHandler: @symfonyart_upload_handler.service.image_handler
+        tags:
+            - { name: symfonyart_upload_handler.annotation_handler }
