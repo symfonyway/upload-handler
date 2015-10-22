@@ -11,6 +11,7 @@ use SymfonyArt\UploadHandlerBundle\Service\ImageHandler;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Doctrine\Common\Annotations\Reader;
 use SymfonyArt\UploadHandlerBundle\Tool\ClassTool;
+use SymfonyArt\UploadHandlerBundle\UploadableProcessor\UploadableProcessorInterface;
 
 /**
  * Class UploadListener
@@ -20,6 +21,9 @@ use SymfonyArt\UploadHandlerBundle\Tool\ClassTool;
  */
 class UploadListener
 {
+    /** @var UploadableProcessorInterface */
+    private $uploadableProcessor;
+
     /** @var Reader */
     private $reader;
 
@@ -29,8 +33,9 @@ class UploadListener
     /**
      * @param \SymfonyArt\UploadHandlerBundle\Service\ImageHandler $imageHandler
      */
-    public function __construct(Reader $reader, ImageHandler $imageHandler)
+    public function __construct(UploadableProcessorInterface $uploadableProcessor, Reader $reader, ImageHandler $imageHandler)
     {
+        $this->uploadableProcessor = $uploadableProcessor;
         $this->reader = $reader;
         $this->imageHandler = $imageHandler;
     }
@@ -40,7 +45,8 @@ class UploadListener
      */
     public function preUpdate($entity)
     {
-        $this->handleUpload($entity);
+        $this->uploadableProcessor->handleUpdate($entity);
+//        $this->handleUpload($entity);
     }
 
     /**
@@ -48,7 +54,23 @@ class UploadListener
      */
     public function prePersist($entity)
     {
-        $this->handleUpload($entity);
+        $this->uploadableProcessor->handleCreate($entity);
+//        $this->handleUpload($entity);
+    }
+
+    /**
+     * @param \SymfonyArt\UploadHandlerBundle\Entity\ImageUploadableInterface $entity
+     */
+    public function preRemove(ImageUploadableInterface $entity)
+    {
+        $this->uploadableProcessor->handleDelete($entity);
+//        foreach ($entity->getImageProperties() as $property => $filter) {
+//            $filepath = $entity->{'get'.ucfirst($property)}();
+//
+//            if (file_exists($filepath)) {
+//                unlink($filepath);
+//            }
+//        }
     }
 
     /**
@@ -62,6 +84,8 @@ class UploadListener
         $propertyReflections = $entityReflection->getProperties();
 
         foreach ($propertyReflections as $propertyReflection) {
+            /** @var \ReflectionProperty $propertyReflection */
+            $propertyReflection = $propertyReflection;
             $annotations = $this->reader->getPropertyAnnotations($propertyReflection);
 
             foreach ($annotations as $annotation) {
@@ -69,7 +93,7 @@ class UploadListener
                     continue;
                 }
 
-                //TODO: suppert all AnnotationInterface annotations
+                //TODO: support all AnnotationInterface annotations
                 if (!is_a($annotation, 'SymfonyArt\UploadHandlerBundle\Annotation\Image')) {
                     throw new ConfigurationException('Only Image annotation supports now.');
                 }
@@ -79,36 +103,22 @@ class UploadListener
         }
 
 
-        foreach ($entity->getImageProperties() as $property => $filter) {
-            if (null === $entity->{'get'.ucfirst($property).'File'}()) {
-                continue;
-            }
-
-            /** @var UploadedFile $file */
-            $file = $entity->{'get'.ucfirst($property).'File'}();
-            $path = $this->imageHandler->handle(file_get_contents($file->getRealPath()), $filter);
-
-            if (!$path) {
-                throw new UploadHandleException($this->imageHandler->getError());
-            }
-
-            $entity->{'set'.ucfirst($property)}($path);
-            $entity->{'set'.ucfirst($property).'File'}(null);
-        }
-    }
-
-    /**
-     * @param \SymfonyArt\UploadHandlerBundle\Entity\ImageUploadableInterface $entity
-     */
-    public function preRemove(ImageUploadableInterface $entity)
-    {
-        foreach ($entity->getImageProperties() as $property => $filter) {
-            $filepath = $entity->{'get'.ucfirst($property)}();
-
-            if (file_exists($filepath)) {
-                unlink($filepath);
-            }
-        }
+//        foreach ($entity->getImageProperties() as $property => $filter) {
+//            if (null === $entity->{'get'.ucfirst($property).'File'}()) {
+//                continue;
+//            }
+//
+//            /** @var UploadedFile $file */
+//            $file = $entity->{'get'.ucfirst($property).'File'}();
+//            $path = $this->imageHandler->handle(file_get_contents($file->getRealPath()), $filter);
+//
+//            if (!$path) {
+//                throw new UploadHandleException($this->imageHandler->getError());
+//            }
+//
+//            $entity->{'set'.ucfirst($property)}($path);
+//            $entity->{'set'.ucfirst($property).'File'}(null);
+//        }
     }
 
     /**
