@@ -58,7 +58,7 @@ class ImageHandler
     {
         try {
             $binary = $this->createBinary($imageData);
-            $pictureName = time().'.'.$binary->getFormat();
+            $pictureName = md5(time().rand(0, 9999)).'.'.$binary->getFormat();
 
             $this->imagineCache->store(
                 $this->filterManager->applyFilter($binary, $filter),
@@ -104,6 +104,6 @@ class ImageHandler
      */
     private function getUploadDir()
     {
-        return '/uploads/';
+        return '/media/cache/';
     }
 }

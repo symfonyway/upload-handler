@@ -2,12 +2,14 @@
 
 namespace SymfonyArt\UploadHandlerBundle\Tool;
 
+use SymfonyArt\UploadHandlerBundle\Exception\ClassToolException;
+
 class ClassTool
 {
     /**
-     * @param string $propertyName
-     * @param object|string|null $object
-     * @return null|string
+     * @param $propertyName
+     * @param object $object
+     * @throws ClassToolException
      */
     public static function getGetter($propertyName, $object = null)
     {
@@ -15,6 +17,10 @@ class ClassTool
 
         if (!$object) {
             return $methodName;
+        }
+
+        if (!is_object($object)) {
+            throw new ClassToolException(sprintf('Variable must be an object, %s given.', gettype($object)));
         }
 
         if (method_exists($object, $methodName)) {
@@ -26,13 +32,13 @@ class ClassTool
             return $methodName;
         }
 
-        return null;
+        throw new ClassToolException(sprintf('Can\'t find getter for %s::$%s.', get_class($object), $propertyName));
     }
 
     /**
-     * @param string $propertyName
-     * @param object|string|null $object
-     * @return null|string
+     * @param $propertyName
+     * @param object $object
+     * @throws ClassToolException
      */
     public static function getSetter($propertyName, $object = null)
     {
@@ -42,10 +48,14 @@ class ClassTool
             return $methodName;
         }
 
+        if (!is_object($object)) {
+            throw new ClassToolException(sprintf('Variable must be an object, %s given.', gettype($object)));
+        }
+
         if (method_exists($object, $methodName)) {
             return $methodName;
         }
 
-        return null;
+        throw new ClassToolException(sprintf('Can\'t find getter for %s::$%s.', get_class($object), $propertyName));
     }
 }
